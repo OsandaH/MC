@@ -72,3 +72,51 @@ xlabel('Time step'); ylabel('Number of particles');
 legend('Left side','Right side');
 title('Particle exchange simulation');
 
+
+
+
+%%%%%%%%%%%%%% Sampling from f(theta) = 1 / (sin^2(theta) + a*cos^2(theta))
+
+clear; clc; rng('shuffle');
+
+N = 10000;               % number of samples
+theta_range = [0, 2*pi]; % domain
+
+% Try two values of 'a'
+a_values = [0.5, 0.001];
+
+for k = 1:length(a_values)
+    a = a_values(k);
+
+    % Define PDF (unnormalized)
+    f = @(theta) 1 ./ (sin(theta).^2 + a*cos(theta).^2);
+
+    % Find maximum value of f(theta) for rejection sampling
+    theta_grid = linspace(0, 2*pi, 10000);
+    f_max = max(f(theta_grid));
+
+    % Generate samples using rejection method
+    samples = zeros(N,1);
+    count = 0;
+    while count < N
+        theta_try = 2*pi*rand;            % uniform candidate
+        y = f_max * rand;                 % uniform in [0, f_max]
+        if y < f(theta_try)
+            count = count + 1;
+            samples(count) = theta_try;
+        end
+    end
+
+    % -------- Plot results --------
+    figure;
+    histogram(samples, 50, 'Normalization','pdf'); hold on;
+
+    % Normalize f(theta) to make it a proper PDF
+    Z = trapz(theta_grid, f(theta_grid)); % numerical normalization constant
+    f_norm = f(theta_grid)/Z;
+
+    plot(theta_grid, f_norm, 'r', 'LineWidth',2);
+    xlabel('\theta'); ylabel('PDF');
+    title(sprintf('Sampling from f(\\theta), a = %.3f', a));
+    legend('Histogram of samples','Normalized f(\theta)');
+end
