@@ -121,3 +121,47 @@ error = abs(I-true_val);
 fprintf('Stratified Sampling:\n');
 fprintf('Estimate = %.8f, Error = %.2e\n', I, error);
 
+%%%%%%%%%%%%% Q4
+clc; 
+clear; 
+rng(1);
+
+% Parameters
+M = 784; 
+Gamma = 12; 
+m_min = 748; 
+m_max = 820; 
+N = 1000;    % number of events
+
+% Breit-Wigner function
+B = @(m) (Gamma/2) ./ ((m - M).^2 + (Gamma/2)^2);
+
+% (i) Weighted sampling
+m_uniform = m_min + (m_max - m_min) * rand(N,1);
+weights = B(m_uniform);
+
+figure;
+histogram(m_uniform, 40, 'Normalization','pdf','FaceAlpha',0.5); hold on;
+scatter(m_uniform, weights/max(weights), 10, 'r','filled');
+fplot(@(m) B(m)/max(B(M)), [m_min m_max], 'k','LineWidth',1.5);
+title('(i) Weighted Sampling (1000 events)');
+xlabel('m [MeV]'); ylabel('Weighted frequency');
+legend('Uniform events','Weights','Breit-Wigner (scaled)');
+
+% (ii) Rejection sampling
+B0 = B(M); 
+m_accept = [];
+while numel(m_accept) < N
+    m_try = m_min + (m_max - m_min) * rand(N,1);
+    accept = m_try(rand(N,1) < B(m_try)/B0);
+    m_accept = [m_accept; accept];
+end
+m_accept = m_accept(1:N);
+
+figure;
+histogram(m_accept, 40, 'Normalization','pdf','FaceAlpha',0.7); hold on;
+m_vals = linspace(m_min,m_max,1000);
+fplot(@(m) B(m)/trapz(m_vals,B(m_vals)), [m_min m_max], 'r','LineWidth',1.5);
+title('(ii) Rejection Sampling (1000 events)');
+xlabel('m [MeV]'); ylabel('PDF estimate');
+legend('Generated events','Breit-Wigner (normalized)');
