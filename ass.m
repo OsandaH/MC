@@ -165,3 +165,58 @@ fplot(@(m) B(m)/trapz(m_vals,B(m_vals)), [m_min m_max], 'r','LineWidth',1.5);
 title('(ii) Rejection Sampling (1000 events)');
 xlabel('m [MeV]'); ylabel('PDF estimate');
 legend('Generated events','Breit-Wigner (normalized)');
+
+
+%%%%%%%%%%%%% Q5
+clc; clear;
+
+%Parameters
+L = 250;                % box size
+N_particles = 1000;     % total number of particles
+stickiness = 0.5;       % probability of sticking (0 < stickiness <= 1)
+
+% Initialize cluster
+cluster = false(L,L);
+center = ceil(L/2);
+cluster(center, center) = true;  % central seed
+
+% Random walker directions (up, down, left, right)
+dirs = [0 1; 0 -1; 1 0; -1 0];
+
+% Simulation
+for n = 1:N_particles
+    % Start at a random position on the boundary
+    r = rand;
+    if r < 0.25
+        pos = [1, randi(L)];          % top
+    elseif r < 0.5
+        pos = [L, randi(L)];          % bottom
+    elseif r < 0.75
+        pos = [randi(L), 1];          % left
+    else
+        pos = [randi(L), L];          % right
+    end
+    
+    stuck = false;
+    while ~stuck
+        % Random walk step
+        step = dirs(randi(4),:);
+        pos = pos + step;
+        
+        % Bounce back from walls
+        pos = max(min(pos,L),1);
+        
+        % Check neighbors for cluster
+        x = pos(1); y = pos(2);
+        neighbors = cluster(max(x-1,1):min(x+1,L), max(y-1,1):min(y+1,L));
+        if any(neighbors(:)) && rand < stickiness
+            cluster(x,y) = true;
+            stuck = true;
+        end
+    end
+end
+
+% Plot the cluster
+figure;
+imshow(cluster,'InitialMagnification','fit');
+title(['2D DLA Pattern, Stickiness = ', num2str(stickiness)]);
