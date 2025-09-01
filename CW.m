@@ -32,3 +32,43 @@ fplot(@(x) 2*x.^3, [x_min x_max], 'b', 'LineWidth',2);    % upper bound y = 2x^3
 xlabel('x'); ylabel('y');
 title('Integration Region');
 legend('y = x','y = 2x^3','Location','northwest');
+
+
+
+%%%%%%%% Particle exchange simulation
+clear; clc; 
+rng('shuffle');
+
+N = 100;          % total number of particles
+nl = N;           % initial number on left side
+nr = 0;           % initial number on right side
+T = 500;          % number of time steps
+
+nl_record = zeros(1,T); % to record particles on left
+nr_record = zeros(1,T); % to record particles on right
+
+for t = 1:T
+    r = rand;  % random number in [0,1]
+    if r < nl/N
+        % particle moves left -> right
+        nl = nl - 1;
+        nr = nr + 1;
+    else
+        % particle moves right -> left
+        nl = nl + 1;
+        nr = nr - 1;
+    end
+    
+    % record values
+    nl_record(t) = nl;
+    nr_record(t) = nr;
+end
+
+% Plot results
+figure;
+plot(1:T, nl_record, 'b', 'LineWidth',1.5); hold on;
+plot(1:T, nr_record, 'r', 'LineWidth',1.5);
+xlabel('Time step'); ylabel('Number of particles');
+legend('Left side','Right side');
+title('Particle exchange simulation');
+
